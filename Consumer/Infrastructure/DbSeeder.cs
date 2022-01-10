@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Polly;
 
 namespace Consumer.Infrastructure
 {
@@ -18,18 +20,29 @@ namespace Consumer.Infrastructure
 
         public async Task MigrateAndSeedAsync()
         {
-            try
-            {
-                _logger.LogInformation("DB: {DbName}", _context.Database.GetDbConnection().Database);
-                _logger.LogInformation("Migrate and seed DB...");
-                await _context.Database.MigrateAsync();
-                _logger.LogInformation("Migrated...");
-            }
-            catch (Exception e)
-            {
-                _logger.LogError($"Error during migration: {e.Message}");
-            }
-      
+            const byte retryCount = 2;
+            const byte retryDuration = 15;
+
+            var fallback = Policy
+                .Handle<Exception>()
+                .FallbackAsync(_ => Task.CompletedTask, async ex =>
+                {
+                    await Task.FromResult(true);
+                    _logger.LogError($"Error during migration: {ex.Message}");
+                });
+
+            var retry = Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(retryCount, x => TimeSpan.FromSeconds(retryDuration));
+
+            await fallback.WrapAsync(retry)
+                .ExecuteAsync(async () =>
+                {
+                    _logger.LogInformation("DB: {DbName}", _context.Database.GetDbConnection().Database);
+                    _logger.LogInformation("Migrate and seed DB...");
+                    await _context.Database.MigrateAsync();
+                    _logger.LogInformation("Migrated...");
+                });
         }
     }
 }
