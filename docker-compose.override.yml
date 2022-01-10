@@ -1,0 +1,17 @@
+version: '3.4'
+
+services:
+  producer:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8000
+    ports:
+      - "8000:8000"
+
+  consumer:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8001
+      - ConnectionStrings_SqlConnection=Data Source=mssql;user id=sa;password=mssql1Ipw;Initial Catalog=RabbitMQTestDb
+    ports:
+      - "8001:8001"
