@@ -1,23 +1,24 @@
 ﻿using System.Threading.Tasks;
 using Consumer.Core.Abstractions.History;
+using Consumer.Core.Abstractions.History.Models;
 using EventBus.Abstractions;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 
 namespace Consumer.Bus.Consumers
 {
-    public class TestEventConsumer: IConsumer<TestEvent>
+    public class HistoryEventConsumer: IConsumer<HistoryEvent>
     {
         private readonly IHistoryService _historyService;
-        private readonly ILogger<TestEventConsumer> _logger;
+        private readonly ILogger<HistoryEventConsumer> _logger;
 
-        public TestEventConsumer(IHistoryService historyService, ILogger<TestEventConsumer> logger)
+        public HistoryEventConsumer(IHistoryService historyService, ILogger<HistoryEventConsumer> logger)
         {
             _historyService = historyService;
             _logger = logger;
         }
 
-        public async Task Consume(ConsumeContext<TestEvent> context)
+        public async Task Consume(ConsumeContext<HistoryEvent> context)
         {
             await _historyService.AddHistoryAsync(new History
             {
@@ -25,7 +26,7 @@ namespace Consumer.Bus.Consumers
                 Description = context.Message.Description
             });
             
-            _logger.LogInformation($"{nameof(TestEvent)} was saved");
+            _logger.LogInformation($"{nameof(HistoryEvent)} was saved");
         }
     }
 }

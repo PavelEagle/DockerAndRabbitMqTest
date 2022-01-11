@@ -1,6 +1,6 @@
 ﻿namespace EventBus.Abstractions
 {
-    public class TestEvent
+    public class HistoryEvent
     {
         public string Title { get; set; }
         public string Description { get; set; }

@@ -4,6 +4,7 @@ using Consumer.Bus.Consumers;
 using EventBus;
 using GreenPipes;
 using MassTransit;
+using MassTransit.RabbitMqTransport;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
@@ -17,7 +18,8 @@ namespace Consumer.Bus
 
             services.AddMassTransit(x =>
             {
-                x.AddConsumer<TestEventConsumer>();
+                x.AddConsumer<HistoryEventConsumer>();
+                x.AddConsumer<HistoryRequestConsumer>();
 
                 x.AddBus(context => MassTransit.Bus.Factory.CreateUsingRabbitMq(cfg =>
                 {
@@ -27,12 +29,8 @@ namespace Consumer.Bus
                         h.Password(busConfiguration.Password);
                     });
 
-                    cfg.ReceiveEndpoint(QueueNames.TestQueue, ep =>
-                    {
-                        ep.PrefetchCount = 16;
-                        ep.UseMessageRetry(r => r.Interval(2, 100));
-                        ep.ConfigureConsumer<TestEventConsumer>(context);
-                    });
+                    cfg.DefaultReceiveEndpoint<HistoryEventConsumer>(QueueNames.TestQueue, context);
+                    cfg.DefaultReceiveEndpoint<HistoryRequestConsumer>(QueueNames.TestRequestQueue, context);
                 }));
             });
 
@@ -46,6 +44,18 @@ namespace Consumer.Bus
         {
             var serviceProvider = services.BuildServiceProvider();
             return serviceProvider.GetRequiredService<IOptions<BusConfiguration>>().Value;
+        }
+
+        private static void DefaultReceiveEndpoint<T>(
+            this IRabbitMqBusFactoryConfigurator configuration, string queueName, IRegistration context)
+        where T: class, IConsumer
+        {
+            configuration.ReceiveEndpoint(queueName, ep =>
+            {
+                ep.PrefetchCount = 16;
+                ep.UseMessageRetry(r => r.Interval(2, 100));
+                ep.ConfigureConsumer<T>(context);
+            });
         }
     }
 }

@@ -1,6 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using Consumer.Infrastructure.Context;
 using Consumer.Infrastructure.DAL.History.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Consumer.Infrastructure.DAL.History
 {
@@ -13,7 +15,7 @@ namespace Consumer.Infrastructure.DAL.History
             _context = context;
         }
 
-        public async Task AddHistoryAsync(Core.Abstractions.History.History history)
+        public async Task AddHistoryAsync(Core.Abstractions.History.Models.History history)
         {
             var dbModel = new DbHistory
             {
@@ -23,6 +25,20 @@ namespace Consumer.Infrastructure.DAL.History
             
             await _context.History.AddAsync(dbModel);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<Core.Abstractions.History.Models.History> GetHistoryAsync(int id)
+        {
+            var history = await _context.History
+                .Where(x=>x.Id == id)
+                .FirstOrDefaultAsync();
+            
+            return new Core.Abstractions.History.Models.History
+            {
+                Title = history.Title,
+                Description = history.Description,
+                CreatedAt = history.CreatedAt
+            };
         }
     }
 }

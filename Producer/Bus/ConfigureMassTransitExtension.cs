@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using EventBus;
+using EventBus.Abstractions;
+using EventBus.Extensions;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -12,6 +14,8 @@ namespace Producer.Bus
         public static IServiceCollection ConfigureMassTransit(this IServiceCollection services)
         {
             var busConfiguration = GetBusConfiguration(services);
+            
+            BusExtensions.InitHost(busConfiguration.Host);
 
             services.AddMassTransit(x =>
             {
@@ -23,9 +27,12 @@ namespace Producer.Bus
                         h.Password(busConfiguration.Password);
                     });
                 }));
+                
+                x.AddRequestClient<HistoryRequest>();
             });
 
             services.AddMassTransitHostedService();
+            services.AddGenericRequestClient();
 
             return services;
         }
