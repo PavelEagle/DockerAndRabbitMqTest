@@ -33,12 +33,12 @@ namespace Consumer.Infrastructure.DAL.History
                 .Where(x=>x.Id == id)
                 .FirstOrDefaultAsync();
             
-            return new Core.Abstractions.History.Models.History
+            return history != null ? new Core.Abstractions.History.Models.History
             {
                 Title = history.Title,
                 Description = history.Description,
                 CreatedAt = history.CreatedAt
-            };
+            }: null;
         }
     }
 }

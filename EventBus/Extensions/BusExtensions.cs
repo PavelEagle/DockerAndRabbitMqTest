@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using EventBus.Abstractions;
 using MassTransit;
 
 namespace EventBus.Extensions
@@ -24,9 +25,20 @@ namespace EventBus.Extensions
         {
             var uri = new Uri($"{_host}/{queue}");
             var client = bus.CreateRequestClient<TMessage>(uri);
-            var response = await client.GetResponse<TResult>(message);
+            var response = await client.GetResponse<TResult, NotFoundEvent>(message);
 
-            return response.Message;
+            // TODO add custom exceptions
+            if (response.Is(out Response<NotFoundEvent> _))
+            {
+                return null;
+            }
+            
+            if (response.Is(out Response<TResult> result))
+            {
+                return result.Message;
+            }
+
+            throw new InvalidOperationException();
         }
     }
 }

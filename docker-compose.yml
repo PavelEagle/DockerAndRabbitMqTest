@@ -8,7 +8,9 @@ services:
       dockerfile: Producer/Dockerfile
     ports:
       - 8000:8000      
-  
+    depends_on:      
+      - rabbitmq  
+
   consumer:
     image: ${DOCKER_REGISTRY-}consumer
     build:
@@ -18,13 +20,12 @@ services:
       - 8001:8001
     depends_on:
       - mssql        
+      - rabbitmq
 
   mssql:    
     image: mcr.microsoft.com/mssql/server:latest
     ports:
       - 1433:1433
-    volumes:
-      - ~/apps/mssql/data:/var/lib/mssqlql/data
     environment:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=mssql1Ipw
@@ -35,7 +36,4 @@ services:
     ports:
         - 5672:5672
         - 15672:15672
-    volumes:
-        - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
-        - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
 

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using EventBus;
-using EventBus.Abstractions;
 using EventBus.Extensions;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,8 +26,6 @@ namespace Producer.Bus
                         h.Password(busConfiguration.Password);
                     });
                 }));
-                
-                x.AddRequestClient<HistoryRequest>();
             });
 
             services.AddMassTransitHostedService();

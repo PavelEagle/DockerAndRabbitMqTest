@@ -5,7 +5,7 @@ using MassTransit;
 
 namespace Consumer.Bus.Consumers
 {
-    public class HistoryRequestConsumer: IConsumer<HistoryRequest>
+    public class HistoryRequestConsumer : IConsumer<HistoryRequest>
     {
         private readonly IHistoryService _historyService;
 
@@ -18,12 +18,22 @@ namespace Consumer.Bus.Consumers
         {
             var history = await _historyService.GetHistoryAsync(context.Message.Id);
 
-            await context.RespondAsync<HistoryResponse>(new
+            if (history == null)
             {
-                history.Title,
-                history.Description,
-                history.CreatedAt
-            });
+                await context.RespondAsync<HistoryNotFound>(new
+                {
+                    Message = $"{typeof(HistoryNotFound)} not found"
+                });
+            }
+            else
+            {
+                await context.RespondAsync<HistoryResponse>(new
+                {
+                    history.Title,
+                    history.Description,
+                    history.CreatedAt
+                });
+            }
         }
     }
 }

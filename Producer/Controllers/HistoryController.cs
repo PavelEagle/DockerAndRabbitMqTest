@@ -39,6 +39,10 @@ namespace Producer.Controllers
             var result = await _bus.GetResponseAsync<HistoryRequest, HistoryResponse>(
                 new HistoryRequest {Id = id},
                 QueueNames.TestRequestQueue);
+
+            // TODO fix it on middleware exceptions
+            if (result == null)
+                return NotFound($"History with id = {id} not found");
             
             return Ok(result);
         }
